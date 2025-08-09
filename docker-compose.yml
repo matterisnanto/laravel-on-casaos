@@ -1,0 +1,61 @@
+version: '3.9'
+
+services:
+  db:
+    image: mariadb:latest
+    container_name: laravel-db
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: (password lo)
+      MYSQL_DATABASE: (nama database lo)
+      MYSQL_USER: matterisnanto
+      MYSQL_PASSWORD: (password lo)
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - laravel_network
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+
+  web:
+    image: php:8.2-apache
+    container_name: laravel-web
+    depends_on:
+      - db
+    volumes:
+      - /DATA/AppData/(file project lo)/var/www/html
+    environment:
+      DB_HOST: db
+      DB_DATABASE: (nama database lo)
+      DB_USERNAME: matterisnanto
+      DB_PASSWORD: (password lo)
+      VITE_APP_URL: ${APP_URL}
+    ports:
+      - "80:80"
+    networks:
+      - laravel_network
+    restart: unless-stopped
+
+  vite:
+    image: node:18
+    container_name: laravel-vite
+    working_dir: /var/www/html
+    volumes:
+      - /DATA/AppData/(file project lo)/var/www/html
+      - /DATA/AppData/(file project lo)/node_modules:/var/www/html/node_modules
+    ports:
+      - "5173:5173"
+    networks:
+      - laravel_network
+    command: sh -c "npm install && npm run dev"
+    depends_on:
+      - web
+
+volumes:
+  mysql_data:
+    name: mysql_data
+
+networks:
+  laravel_network:
+    driver: bridge
